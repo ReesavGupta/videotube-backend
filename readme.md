@@ -1,2 +1,2 @@
-# chai aur backend series
-this is a video series on chai and backend with javaScript
+# Creating a full stack application named Video Tube
+we use Mern lesss goooooooo
