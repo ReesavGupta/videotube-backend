@@ -48,15 +48,20 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // the "res" object by default doesn't have the ".files" property but since we used multer as the middleware in user.routes file.
 
-    const avatarLocalPath = res.files?.avatar[0]?.path;
-    const coverImageLocalPath = res.files?.coverImage[0]?.path;
+    const avatarLocalPath = req.files?.avatar[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
 
     if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required")
+        throw new ApiError(400, "Avatar file is required local")
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
-    const coverImage = await uploadOnCloudinary(coverImageLocalPathLocalPath);
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     if (!avatar) {
         throw new ApiError(400, "Avatar file is required");
@@ -80,11 +85,11 @@ const registerUser = asyncHandler(async (req, res) => {
         "-password -refreshToken"
     )
 
-    if(!createdUser){
+    if (!createdUser) {
         throw new ApiError(500, "something went wrong while regestering the user")
     }
 
-    return res.status(201).res.json(
+    return res.status(201).json(
         new ApiResponse(200, createdUser, "user created sucessfully")
     )
 
