@@ -33,5 +33,9 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
+export const deleteOldAvatarFromCloudinary = async (oldAvatarUrl) => {
+    await cloudinary.uploader.destroy(oldAvatarUrl, (result) => console.log(result));
+}
+
 
 export default uploadOnCloudinary

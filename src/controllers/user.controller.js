@@ -1,9 +1,10 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js"
 import { User } from "../models/user.models.js"
-import uploadOnCloudinary from "../utils/cloudinary.js"
+import uploadOnCloudinary, { deleteOldAvatarFromCloudinary } from "../utils/cloudinary.js"
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -308,6 +309,8 @@ const updateAvatarImage = asyncHandler(async (req, res) => {
 
     const avatarLocalPath = req.file?.path
 
+    const oldAvatar = req.user?.avatar;
+
     if (!avatarLocalPath) {
         throw new ApiError(400, "avatar file is missing")
     }
@@ -325,6 +328,8 @@ const updateAvatarImage = asyncHandler(async (req, res) => {
         },
         { new: true }
     ).select("-password")
+
+    await deleteOldAvatarFromCloudinary(oldAvatar);
 
     return res
         .status(200)
