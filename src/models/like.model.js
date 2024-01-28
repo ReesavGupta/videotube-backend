@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose"
-import { comment } from "./comment.model"
 
 const likeSchema = new mongoose.Schema(
     {
