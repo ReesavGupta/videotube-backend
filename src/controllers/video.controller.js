@@ -81,12 +81,15 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
     // TODO: get video, upload to cloudinary, create video
     const { title, description } = req.body
+    console.log(
+        `\n \n this is title: ${title} and this is desc: ${description}`
+    )
 
     if (!title || !description) {
         throw new ApiError(402, "all the fields are required")
     }
 
-    const videoLocalPath = req.files?.video[0]?.path
+    const videoLocalPath = req.files?.videoFile[0]?.path
     const thumbnailLocalPath = req.files?.thumbnail[0]?.path
 
     if (!videoLocalPath || !thumbnailLocalPath) {
@@ -96,7 +99,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const videoFile = await uploadOnCloudinary(videoLocalPath)
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
 
-    if (videoFile === null || thumbnail === null) {
+    if (!videoFile || !thumbnail) {
         throw new ApiError(
             500,
             "there was an error while uploading the video or thumbnail to the server"
@@ -108,7 +111,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         description,
         videoFile: videoFile.url,
         thumbnail: thumbnail.url,
-        duration: video.videoDuration,
+        duration: videoFile.duration,
         owner: req.user?._id,
     })
     return res
@@ -133,7 +136,7 @@ const getVideoById = asyncHandler(async (req, res) => {
                 from: "users",
                 localField: "owner",
                 foreignField: "_id",
-                as: "owner-details",
+                as: "ownerDetails",
                 pipeline: [
                     {
                         $lookup: {
@@ -204,7 +207,7 @@ const getVideoById = asyncHandler(async (req, res) => {
                 createdAt: 1,
                 duration: 1,
                 comments: 1,
-                owner: 1,
+                ownerDetails: 1,
                 likesCount: 1,
                 isLiked: 1,
             },
@@ -223,7 +226,9 @@ const getVideoById = asyncHandler(async (req, res) => {
             watchHistory: videoId,
         },
     })
-    return res.status(200).json(200, video, "Sucessfully fetched the video")
+    return res
+        .status(200)
+        .json(new ApiResponse(200, video, "Sucessfully fetched the video"))
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
