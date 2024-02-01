@@ -18,46 +18,44 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Channel not found")
     }
 
-    if (channel.toString() === userId.toString()) {
+    if (channelId.toString() === userId.toString()) {
         throw new ApiError(400, "Bro you cannot subscribe your own channel")
     }
 
-    const subscription = await Subscription.findById(channelId)
+    const subscription = await Subscription.findOne({
+        channel: channelId,
+        subscriber: userId,
+    })
+    console.log(subscription)
 
-    let unsunscribe
-    let subscribe
-
-    if (subscription?.subscriber?.toString() === userId.toString()) {
-        unsunscribe = await Subscription.findOneAndDelete({
-            subscriber: userId,
+    if (!subscription) {
+        await Subscription.create({
             channel: channelId,
-        })
-    } else {
-        subscribe = await Subscription.create({
             subscriber: userId,
-            channel: channelId,
         })
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "subscribed suucessfully"))
     }
+    // console.log(subscription._id)
+    const unsubscribed = await Subscription.findOneAndDelete({
+        channel: channelId,
+        subscriber: userId,
+    })
     return res
         .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                {},
-                `${unsunscribe ? "unsubscribed" : "subscribed"} sucessfullly`
-            )
-        )
+        .json(new ApiResponse(200, unsubscribed, "unsubscribed sucessfully"))
 })
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-    const { channelId } = req.params
+    const { subscriberId } = req.params
 
-    if (!isValidObjectId(channelId)) {
+    if (!isValidObjectId(subscriberId)) {
         throw new ApiError(400, "provide a vlaid channel ID")
     }
 
-    const channel = await User.findById(channelId)
+    const channel = await User.findById(subscriberId)
 
     if (!channel) {
         throw new ApiError(404, "Channel not found")
@@ -66,7 +64,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const subscriptions = await Subscription.aggregate([
         {
             $match: {
-                channel: new mongoose.Types.ObjectId(channelId),
+                channel: new mongoose.Types.ObjectId(subscriberId),
             },
         },
         {
@@ -94,6 +92,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
             },
         },
     ])
+    console.log(subscriptions)
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -107,12 +106,12 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params
+    const { channelId } = req.params
 
-    if (!isValidObjectId(subscriberId)) {
+    if (!isValidObjectId(channelId)) {
         throw new ApiError(400, "provide a valid subscriber id")
     }
-    const subscriber = await User.findById(subscriberId)
+    const subscriber = await User.findById(channelId)
 
     if (!subscriber) {
         throw new error(400, "user not found.")
@@ -120,7 +119,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     const subscriptions = await Subscription.aggregate([
         {
             $match: {
-                subscriber: new mongoose.Types.ObjectId(subscriberId),
+                subscriber: new mongoose.Types.ObjectId(channelId),
             },
         },
         {
@@ -129,15 +128,16 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                 localField: "subscriber",
                 foreignField: "_id",
                 as: "channelSubscribedToList",
-                pipeline: {
-                    $project: [
-                        {
+                pipeline: [
+                    {
+                        $project: {
+                            
                             name: 1,
                             email: 1,
                             avatar: 1,
                         },
-                    ],
-                },
+                    },
+                ],
             },
         },
         {
