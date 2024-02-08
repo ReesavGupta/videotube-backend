@@ -62,7 +62,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
         {
             $addFields: {
                 playlistThumbnail: {
-                    $codn: {
+                    $cond: {
                         if: { isArray: "$videos" },
                         then: { $first: "$videos.thumbnail" },
                         else: null,
@@ -86,7 +86,13 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(200, { playlists }, "User Playlists fetched successfully")
+        .json(
+            new ApiResponse(
+                200,
+                { playlists },
+                "User Playlists fetched successfully"
+            )
+        )
 })
 
 const getPlaylistById = asyncHandler(async (req, res) => {
@@ -215,9 +221,13 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     if (!video) {
         throw new ApiError(400, "Couldn't find video")
     }
-    const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId, {
-        $pull: { _id: videoId },
-    })
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
+        playlistId,
+        {
+            $pull: { videos: videoId },
+        },
+        { new: true }
+    )
     if (!updatedPlaylist) {
         throw new ApiError(500, "There was an error while updating the results")
     }
@@ -249,7 +259,9 @@ const deletePlaylist = asyncHandler(async (req, res) => {
             "There was an error while deleting the playlist"
         )
     }
-    return res.status(200).json(200, {}, "Playlist deleted sucessfully")
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Playlist deleted sucessfully"))
 })
 
 const updatePlaylist = asyncHandler(async (req, res) => {
@@ -286,7 +298,13 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(200, updatedPlaylist, "Playlist updated sucessfully")
+        .json(
+            new ApiResponse(
+                200,
+                updatedPlaylist,
+                "Playlist updated sucessfully"
+            )
+        )
 })
 
 export {
