@@ -111,7 +111,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     if (!newLike) {
         throw new ApiError(500, "Couldn't like the tweet")
     }
-    return res.status(200).json(200, {}, "liked successfully")
+    return res.status(200).json(new ApiResponse(200, {}, "liked successfully"))
 })
 
 const getLikedVideos = asyncHandler(async (req, res) => {
@@ -157,8 +157,8 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                 _id: 0,
                 likedVideo: {
                     _id: 1,
-                    "videoFile.url": 1,
-                    "thumbnail.url": 1,
+                    videoFile: 1,
+                    thumbnail: 1,
                     owner: 1,
                     title: 1,
                     description: 1,
@@ -169,7 +169,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                     ownerDetails: {
                         username: 1,
                         fullName: 1,
-                        "avatar.url": 1,
+                        avatar: 1,
                     },
                 },
             },
