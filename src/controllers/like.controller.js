@@ -155,7 +155,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         {
             $project: {
                 _id: 0,
-                likedVideo: {
+                likedVideos: {
                     _id: 1,
                     videoFile: 1,
                     thumbnail: 1,
