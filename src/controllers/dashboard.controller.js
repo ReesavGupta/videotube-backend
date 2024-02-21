@@ -14,6 +14,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
             $match: {
                 channel: new mongoose.Types.ObjectId(userID),
             },
+        },
+        {
             $group: {
                 _id: null,
                 subscriberCount: {
@@ -124,7 +126,13 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(200, { videos }, "fetched channel videos sucessfully")
+        .json(
+            new ApiResponse(
+                200,
+                { videos },
+                "fetched channel videos sucessfully"
+            )
+        )
 })
 
 export { getChannelStats, getChannelVideos }
