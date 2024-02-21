@@ -22,30 +22,30 @@ const getVideoComments = asyncHandler(async (req, res) => {
         {
             $lookup: {
                 from: "users",
-                localfield: "owner",
-                foreignfield: "_id",
-                as: "owner",
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails",
             },
         },
         {
             $lookup: {
                 from: "likes",
-                localfield: "_id",
-                foreignfield: "comment",
+                localField: "_id",
+                foreignField: "comment",
                 as: "likes",
             },
         },
         {
-            $addfields: {
+            $addFields: {
                 likes: {
                     $size: "$likes",
                 },
                 owner: {
-                    $first: "$owner",
+                    $first: "$ownerDetails",
                 },
                 isLiked: {
                     $cond: {
-                        $if: { $in: [req.user._id, "$likes.likedBy"] },
+                        if: { $in: [req.user._id, "$likes.likedBy"] },
                         then: true,
                         else: false,
                     },
@@ -74,7 +74,13 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(200, comments, "Sucessfully fetched the video comments")
+        .json(
+            new ApiResponse(
+                200,
+                comments,
+                "Sucessfully fetched the video comments"
+            )
+        )
 })
 
 const addComment = asyncHandler(async (req, res) => {
@@ -154,7 +160,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
     const { commentId } = req.params
 
-    if (!isValidObjectId()) {
+    if (!isValidObjectId(commentId)) {
         throw new ApiError(400, "Provide a valid comment ID")
     }
     const comment = await Comment.findById(commentId)
